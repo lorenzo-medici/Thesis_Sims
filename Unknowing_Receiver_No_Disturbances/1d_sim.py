@@ -48,7 +48,7 @@ def transition_target(old_target: tuple[float]) -> tuple[float]:
     return (sin(time() * 5) + 3.5,)
 
 
-def sensor_reading(receiver_pos: tuple[float], target_pos: tuple[float]) -> reading:
+def sensor_reading(receiver_pos: tuple[float], target_pos: tuple[float]) -> reading_t:
     source_powers = [max_powers[i] * ((towers[i] - receiver_pos[0]) / (target_pos[0] - towers[i])) ** 2 for i in [0, 1]]
 
     received_powers = [source_powers[i] / (towers[i] - receiver_pos[0]) ** 2 for i in [0, 1]]
@@ -56,7 +56,7 @@ def sensor_reading(receiver_pos: tuple[float], target_pos: tuple[float]) -> read
     return [sqrt(max_powers[i] / received_powers[i]) for i in [0, 1]]
 
 
-def compute_iota(distances: reading) -> tuple[float]:
+def compute_iota(distances: reading_t) -> tuple[float]:
     d1, d2 = distances
 
     if isclose(towers[0] + d1, towers[1] + d2) or isclose(towers[0] + d1, towers[1] - d2):
@@ -79,7 +79,8 @@ if __name__ == '__main__':
     receiver_initial_pos: tuple[float] = (5.0,)
     target_initial_pos: tuple[float] = (4.0,)
 
-    run_simulation(setup_screen,
+    run_simulation("1D sensor illusion",
+                   setup_screen,
                    receiver_initial_pos,
                    transition_receiver,
                    draw_receiver,

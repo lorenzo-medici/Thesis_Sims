@@ -3,18 +3,19 @@ from typing import Callable
 import pygame
 from pygame import Surface, SurfaceType
 
-from utils import x_state, reading, display_width, display_height
+from utils import x_state_t, reading_t, display_width, display_height, iota_t
 
 
-def run_simulation(setup_screen: Callable[[Surface | SurfaceType], None],
-                   receiver_initial_pos: x_state,
-                   transition_receiver: Callable[[x_state], x_state],
-                   draw_receiver: Callable[[x_state, Surface | SurfaceType], None],
-                   transition_target: Callable[[x_state], x_state],
-                   target_initial_pos: x_state,
-                   sensor_reading: Callable[[x_state, x_state], reading],
-                   compute_iota: Callable[[reading], x_state],
-                   draw_iota: Callable[[x_state, Surface | SurfaceType], None]
+def run_simulation(simulation_name: str,
+                   setup_screen: Callable[[Surface | SurfaceType], None],
+                   receiver_initial_pos: x_state_t,
+                   transition_receiver: Callable[[x_state_t], x_state_t],
+                   draw_receiver: Callable[[x_state_t, Surface | SurfaceType], None],
+                   transition_target: Callable[[x_state_t], x_state_t],
+                   target_initial_pos: x_state_t,
+                   sensor_reading: Callable[[x_state_t, x_state_t], reading_t],
+                   compute_iota: Callable[[reading_t], iota_t],
+                   draw_iota: Callable[[iota_t, Surface | SurfaceType], None]
                    ):
     running = True
 
@@ -22,7 +23,7 @@ def run_simulation(setup_screen: Callable[[Surface | SurfaceType], None],
     screen = pygame.display.set_mode((display_width, display_height))
 
     # Scene setup
-    pygame.display.set_caption("1D example")
+    pygame.display.set_caption(simulation_name)
 
     receiver_pos = receiver_initial_pos
     target_pos = target_initial_pos

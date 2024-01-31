@@ -2,8 +2,9 @@ import pygame
 
 # TYPES
 
-type x_state = tuple[float] | tuple[float, float]
-type reading = list[float]
+type x_state_t = tuple[float] | tuple[float, float]
+type iota_t = x_state_t
+type reading_t = list[float]
 
 # COLORS
 
