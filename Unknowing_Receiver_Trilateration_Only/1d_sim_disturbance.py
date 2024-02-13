@@ -62,7 +62,7 @@ def sensor_reading(receiver_pos: tuple[float], target_pos: tuple[float]) -> read
     return [sqrt(max_powers[i] / received_powers[i]) + disturbances[i] for i in [0, 1]]
 
 
-def compute_iota(distances: reading_t) -> tuple[float, float]:
+def compute_iota(distances: reading_t) -> iota_interval_t:
     positions = [towers[i] + distances[i] for i in [0, 1]]
 
     tower_iotas = [(positions[i] - max_dist, positions[i] + max_dist) for i in [0, 1]]

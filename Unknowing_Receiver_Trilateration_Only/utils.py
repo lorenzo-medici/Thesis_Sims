@@ -3,8 +3,8 @@ import pygame
 # TYPES
 
 type x_state_t = tuple[float] | tuple[float, float]
-type iota_interval_t = tuple[float, float] | tuple[float, float, float, float]
-type iota_t = x_state_t | iota_interval_t
+type iota_interval_t = tuple[float, float]
+type iota_t = iota_interval_t | tuple[iota_interval_t, iota_interval_t, iota_interval_t] | tuple[float]
 type reading_t = list[float]
 
 # COLORS
@@ -16,6 +16,7 @@ PURPLE = (255, 0, 255)
 CYAN = (0, 255, 255)
 BLUE = (0, 0, 255)
 YELLOW = (255, 255, 0)
+WHITE = (255, 255, 255)
 
 # CONSTANTS
 
