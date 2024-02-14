@@ -45,3 +45,16 @@ def normal_pdf(x: float, mean: float, sd: float) -> float:
     num = math.exp(-(float(x) - float(mean)) ** 2 / (2 * var))
     denom = (2 * math.pi * var) ** .5
     return num / denom
+
+
+def color_alpha(color: tuple[int, int, int], alpha: float) -> tuple[int, int, int]:
+    return int(color[0] * alpha), int(color[1] * alpha), int(color[2] * alpha)
+
+
+def mul_list(l: list[float]) -> float:
+    acc = 1
+
+    for x in l:
+        acc *= x
+
+    return acc

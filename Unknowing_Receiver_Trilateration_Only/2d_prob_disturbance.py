@@ -1,7 +1,7 @@
 from math import sin, cos, sqrt
-from random import uniform
+from random import gauss
 from time import time
-from typing import NoReturn, cast
+from typing import NoReturn
 
 from pygame import Surface, SurfaceType
 
@@ -15,19 +15,20 @@ unit_multiplier = 35
 origin_y = display_height / 2 + 100
 origin_x = display_width / 2 - 100
 
-pixel_granularity = 3
+pixel_granularity = 5
 
 # simulation parameters
 
 towers = [(0.0, 0.0),
-          (1.0, 0.0),
-          (1.0, 1.0)]
+          (5.0, 0.0),
+          (5.0, 5.0)]
 
 max_powers = [1.0,
               1.0,
               1.0]
 
-max_dist = 0.2
+dist_mu = 0.0
+dist_sigma = 0.3
 
 # save target
 
@@ -47,7 +48,7 @@ def setup_screen(screen: Surface | SurfaceType) -> NoReturn:
     text(screen, 10, 40, content="Tower 2", colour=CYAN)
     text(screen, 10, 70, content="Tower 3", colour=BLUE)
     text(screen, 10, 100, content="Receiver true position", colour=YELLOW)
-    text(screen, 10, 130, content="PDF of receiver measured position", colour=RED)
+    text(screen, 10, 130, content="Receiver measured position", colour=RED)
 
 
 def transition_receiver(old_state: tuple[float, float]) -> tuple[float, float]:
@@ -60,7 +61,7 @@ def draw_receiver(x: tuple[float, float], screen: Surface | SurfaceType, color=Y
 
 def transition_target(old_target: tuple[float, float]) -> tuple[float, float]:
     global current_target
-    current_target = sin(time() * 5) + 3.5, cos(time() * 5) + 3.5
+    current_target = sin(time() * 5) + 2.5, cos(time() * 5) + 2.5
 
     return current_target
 
@@ -71,33 +72,39 @@ def sensor_reading(receiver_pos: tuple[float, float], target_pos: tuple[float, f
 
     received_powers = [source_powers[i] / distance(towers[i], receiver_pos) ** 2 for i in [0, 1, 2]]
 
-    disturbances = [uniform(- max_dist, max_dist) for _ in [0, 1, 2]]
+    disturbances = [gauss(dist_mu, dist_sigma) for _ in [0, 1, 2]]
 
     return [sqrt(max_powers[i] / received_powers[i]) + disturbances[i] for i in [0, 1, 2]]
 
 
-def compute_iota(distances: reading_t) -> tuple[iota_interval_t, iota_interval_t, iota_interval_t]:
-    tower_iotas = cast(tuple[iota_interval_t, iota_interval_t, iota_interval_t],
-                       [(distances[i] - max_dist, distances[i] + max_dist) for i in [0, 1, 2]])
+def compute_iota(distances: reading_t) -> iota_t:
+    probabilities = tuple(
+        [mul_list([normal_pdf(distance(world_pos((p_x, p_y)), towers[i]), distances[i], dist_sigma) for i in [0, 1, 2]])
+         for p_x in range(0, display_width, pixel_granularity)
+         for p_y in range(0, display_height, pixel_granularity)]
+    )
 
-    return tower_iotas
+    return probabilities
 
 
-def draw_iota(x: tuple[iota_interval_t, iota_interval_t, iota_interval_t],
+def draw_iota(x: iota_t,
               screen: Surface | SurfaceType,
               color=RED) -> NoReturn:
+    max_p = max(x)  # Used to normalize PDF
+
     for p_x in range(0, display_width, pixel_granularity):
         for p_y in range(0, display_height, pixel_granularity):
-            real_pos = world_pos((p_x, p_y))
 
-            if x[0][0] <= distance(real_pos, towers[0]) <= x[0][1] and \
-                    x[1][0] <= distance(real_pos, towers[1]) <= x[1][1] and \
-                    x[2][0] <= distance(real_pos, towers[2]) <= x[2][1]:
-                screen.fill(color,
-                            ((p_x - pixel_granularity // 2, p_y - pixel_granularity // 2),
-                             (pixel_granularity, pixel_granularity)))
+            prob = x[p_x * display_height // (pixel_granularity ** 2) + p_y // pixel_granularity] / max_p
 
-    pygame.draw.circle(screen, WHITE, display_pos(current_target), 5)
+            # "Hack" to avoid covering everything that has been drawn already
+            if prob > 0.2:
+                screen.fill(
+                    color_alpha(color, prob),
+                    ((p_x - pixel_granularity // 2, p_y - pixel_granularity // 2),
+                     (pixel_granularity, pixel_granularity)))
+
+    # pygame.draw.circle(screen, WHITE, display_pos(current_target), 5)
 
 
 # specific utils
@@ -117,7 +124,7 @@ if __name__ == '__main__':
     receiver_initial_pos = (6.0, 6.0)
     target_initial_pos = (4.0, 4.0)
 
-    run_simulation("2D sensor illusion with nondeterministic sensing disturbance",
+    run_simulation("2D sensor illusion with probabilistic sensing disturbance",
                    setup_screen,
                    receiver_initial_pos,
                    transition_receiver,
