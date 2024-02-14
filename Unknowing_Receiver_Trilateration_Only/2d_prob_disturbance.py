@@ -79,7 +79,8 @@ def sensor_reading(receiver_pos: tuple[float, float], target_pos: tuple[float, f
 
 def compute_iota(distances: reading_t) -> iota_t:
     probabilities = tuple(
-        [mul_list([normal_pdf(distance(world_pos((p_x, p_y)), towers[i]), distances[i], dist_sigma) for i in [0, 1, 2]])
+        [mul_list([normal_pdf(distance(world_pos((p_x, p_y)), towers[i]), distances[i] + dist_mu, dist_sigma)
+                   for i in [0, 1, 2]])
          for p_x in range(0, display_width, pixel_granularity)
          for p_y in range(0, display_height, pixel_granularity)]
     )
@@ -87,9 +88,7 @@ def compute_iota(distances: reading_t) -> iota_t:
     return probabilities
 
 
-def draw_iota(x: iota_t,
-              screen: Surface | SurfaceType,
-              color=RED) -> NoReturn:
+def draw_iota(x: iota_t, screen: Surface | SurfaceType, color=RED) -> NoReturn:
     max_p = max(x)  # Used to normalize PDF
 
     for p_x in range(0, display_width, pixel_granularity):

@@ -13,20 +13,20 @@ from utils import *
 unit_multiplier = 30
 
 origin_y = display_height / 2 + 100
-origin_x = display_width / 2
+origin_x = display_width / 2 - 100
 
 dist_max_display_height = 10
 
 # simulation parameters
 
 towers = [0.0,
-          3.0]
+          6.0]
 
 max_powers = [1.0,
               1.0]
 
 dist_mu = 0.0
-dist_sigma = 0.1
+dist_sigma = 0.2
 
 # save target
 
@@ -73,24 +73,34 @@ def sensor_reading(receiver_pos: tuple[float], target_pos: tuple[float]) -> read
 
 
 def compute_iota(distances: reading_t) -> iota_t:
-    probabilities = tuple(
-        [sum([p for i in [0, 1] for p in [normal_pdf(real_pos(p_x), towers[i] - (distances[i] + dist_mu), dist_sigma),
-                                          normal_pdf(real_pos(p_x), towers[i] + (distances[i] + dist_mu), dist_sigma)]])
-         for p_x in range(0, display_width)])
+    probabilities = []
 
-    return probabilities
+    for p_x in range(0, display_width):
+        t0_plus = normal_pdf(real_pos(p_x), towers[0] + (distances[0] + dist_mu), dist_sigma)
+        t0_minus = normal_pdf(real_pos(p_x), towers[0] - (distances[0] + dist_mu), dist_sigma)
+
+        t1_plus = normal_pdf(real_pos(p_x), towers[1] + (distances[1] + dist_mu), dist_sigma)
+        t1_minus = normal_pdf(real_pos(p_x), towers[1] - (distances[1] + dist_mu), dist_sigma)
+
+        probabilities.append(max(
+            t0_plus * t1_plus,
+            t0_plus * t1_minus,
+            t0_minus * t1_plus,
+            t0_minus * t1_minus
+        ))
+
+    return tuple(probabilities)
 
 
-def draw_iota(x: tuple[float, float], screen: Surface | SurfaceType, color=RED) -> NoReturn:
-    # max_p = max(x) / 10  # Normalize PDF
-    max_p = 1  # or not
+def draw_iota(x: iota_t, screen: Surface | SurfaceType, color=RED) -> NoReturn:
+    max_p = max(x) / 10
 
     for p_x in range(0, display_width):
         p_y = origin_y - x[p_x] * dist_max_display_height / max_p - 10
 
         screen.fill(color, ((p_x, p_y), (1, 1)))
 
-    pygame.draw.circle(screen, WHITE, number_line_pos(*current_target), 5)
+    # pygame.draw.circle(screen, WHITE, number_line_pos(*current_target), 5)
 
 
 # specific util
