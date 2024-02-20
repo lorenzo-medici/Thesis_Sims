@@ -25,13 +25,17 @@ unit_multiplier = 30
 start = np.array([0, 0])
 goal = np.array([5, 0])
 
+# storage options
+
+dest_folder = "data/"
+
 
 def save_result(final_pos: npt.NDArray[np.float64], history: list[float]):
     pos = final_pos.tolist()
-    x_string = str(round(pos[0], 1)).replace('.', '_')
-    y_string = str(round(pos[1], 1)).replace('.', '_')
+    x_string = str(round(pos[0], 1)).replace('.', '_').replace('-', 'm')
+    y_string = str(round(pos[1], 1)).replace('.', '_').replace('-', 'm')
 
-    filename = f'data/{x_string}-{y_string}.dat'
+    filename = f'{dest_folder}{x_string}p{y_string}.txt'
 
     if os.path.isfile(filename):
         return
@@ -49,10 +53,10 @@ def search_plane(real_pos: npt.NDArray[np.float64],
                  history: list[float],
                  display: Surface | SurfaceType):
     pos = real_pos.tolist()
-    x_string = str(round(pos[0], 1)).replace('.', '_')
-    y_string = str(round(pos[1], 1)).replace('.', '_')
+    x_string = str(round(pos[0], 1)).replace('.', '_').replace('-', 'm')
+    y_string = str(round(pos[1], 1)).replace('.', '_').replace('-', 'm')
 
-    filename = f'data/{x_string}-{y_string}.dat'
+    filename = f'{dest_folder}{x_string}p{y_string}.txt'
 
     if step == 0 or \
             np.sqrt((i_state - goal).dot(i_state - goal)) < 0.05 or \
@@ -66,7 +70,7 @@ def search_plane(real_pos: npt.NDArray[np.float64],
 
     for action in action_space:
         # compute next I-state
-        i_state_delta = np.array([np.sin(action), np.cos(action)])
+        i_state_delta = np.array([np.cos(action), np.sin(action)])
         next_istate = i_state + i_state_delta
 
         # compute action that receiver takes
@@ -95,7 +99,7 @@ def display_pos(x: tuple[float, float]) -> tuple[float, float]:
 
 if __name__ == '__main__':
 
-    os.makedirs("data", exist_ok=True)
+    os.makedirs(dest_folder, exist_ok=True)
 
     pygame.init()
     screen = pygame.display.set_mode((display_width, display_height))
