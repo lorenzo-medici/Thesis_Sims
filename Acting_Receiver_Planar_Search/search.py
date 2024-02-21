@@ -18,16 +18,18 @@ START = (255, 255, 255)
 GOAL = (255, 255, 0)
 REACHED = (200, 0, 0)
 
-unit_multiplier = 30
+unit_multiplier = 15
 
 # simulation parameters
 
 start = np.array([0, 0])
-goal = np.array([5, 0])
+goal = np.array([10, 0])
+
+unitary_steps_only = False
 
 # storage options
 
-dest_folder = "data/"
+dest_folder = "data_experiment_unitary_steps_only/"
 
 
 def save_result(final_pos: npt.NDArray[np.float64], history: list[float]):
@@ -69,16 +71,23 @@ def search_plane(real_pos: npt.NDArray[np.float64],
     action_space = np.linspace(0, 2 * np.pi, 7)[:-1]
 
     for action in action_space:
-        # compute next I-state
-        i_state_delta = np.array([np.cos(action), np.sin(action)])
-        next_istate = i_state + i_state_delta
-
         # compute action that receiver takes
-        goal_vector = goal - next_istate
+        goal_vector = goal - i_state
         magnitude = np.sqrt(goal_vector.dot(goal_vector))
 
-        receiver_action = goal_vector if magnitude <= 1 else goal_vector / magnitude
+        if unitary_steps_only or magnitude > 1:
+            receiver_action = goal_vector / magnitude
+        else:
+            receiver_action = goal_vector
+
         next_receiver_state = real_pos + receiver_action
+
+        # compute next I-state
+        if unitary_steps_only or magnitude > 1:
+            i_state_delta = np.array([np.cos(action), np.sin(action)])
+        else:
+            i_state_delta = np.array([np.cos(action), np.sin(action)]) * magnitude
+        next_istate = i_state + i_state_delta
 
         # show next receiver position
         pygame.draw.circle(display, REACHED, display_pos(next_receiver_state.tolist()), 2)

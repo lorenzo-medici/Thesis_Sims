@@ -35,16 +35,16 @@ def search_plane(steps: int,
         in_steps = steps
 
         while in_steps > 0 and np.sqrt((i_state - goal).dot(i_state - goal)) >= 0.05:
-            # compute next I-state
-            i_state_delta = np.array([np.cos(action), np.sin(action)])
-            i_state = i_state + i_state_delta
-
             # compute action that receiver takes
             goal_vector = goal - i_state
             magnitude = np.sqrt(goal_vector.dot(goal_vector))
 
-            receiver_action = goal_vector if magnitude <= 1 else goal_vector / magnitude
+            receiver_action = goal_vector / magnitude
             rec_pos = rec_pos + receiver_action
+
+            # compute next I-state
+            i_state_delta = np.array([np.cos(action), np.sin(action)])
+            i_state = i_state + i_state_delta
 
             # show next receiver position
             pygame.draw.circle(display, REACHED, display_pos(rec_pos.tolist()), 2)
